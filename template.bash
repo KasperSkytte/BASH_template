@@ -17,7 +17,8 @@ MAX_THREADS=${MAX_THREADS:-$((`nproc`-2))}
 
 #default error message if bad usage
 usageError() {
-  local self=`basename "$0"`
+  local self
+  self=$(basename "$0")
   echo "Invalid usage: $1" 1>&2
   echo ""
   echo "Run 'bash $self -h' for help"
@@ -36,6 +37,10 @@ case ${opt} in
     echo "Options:"
     echo "  -h    Display this help text and exit."
     echo "  -v    Print version and exit."
+    echo "  -i    Input data."
+    echo "  -d    Path to database."
+    echo "  -t    Max number of threads to use. (Default: all available except 2)"
+    echo "  -o    Output folder."
     exit 1
     ;;
   i )
@@ -93,7 +98,7 @@ then
 fi
 
 #function to add timestamps to progress messages
-echoWithTS() {
+scriptMessage() {
   #check user arguments
   if [ ! $# -eq 1 ]
   then
@@ -104,14 +109,14 @@ echoWithTS() {
 }
 
 ##### START OF ACTUAL SCRIPT #####
-echo "Version: $VERSION"
-echo "max threads: $MAX_THREADS"
-echo "input: $input"
-echo "database: $database"
-echo "output: $output"
+scriptMessage "Version: $VERSION"
+scriptMessage "max threads: $MAX_THREADS"
+scriptMessage "input: $input"
+scriptMessage "database: $database"
+scriptMessage "output: $output"
 ##### END OF ACTUAL SCRIPT #####
 
 #print elapsed time since script was invoked
 duration=$(printf '%02dh:%02dm:%02ds\n' $(($SECONDS/3600)) $(($SECONDS%3600/60)) $(($SECONDS%60)))
-echoWithTS "Done in: $duration!"
+scriptMessage "Done in: $duration!"
 exit 0
