@@ -74,12 +74,6 @@ esac
 done
 shift $((OPTIND -1)) #reset option pointer
 
-#does script need any options or are default values ok?
-if [ $# -eq 0 ]
-then
-	usageError "no arguments passed"
-	exit 1
-fi
 #check all required options
 if [ $i_flag -eq 0 ]
 then
