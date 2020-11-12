@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# This BASH script is based on the template from https://github.com/kasperskytte/bash_template
+# License is MIT, which means the author takes no responsibilities, but you can use it for anything you want
 #exit when a command fails (use "|| true" to allow a command to fail)
 set -o errexit
 # exit when a pipe fails
