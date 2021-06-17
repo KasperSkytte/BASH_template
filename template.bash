@@ -1,29 +1,32 @@
 #!/usr/bin/env bash
 # This BASH script is based on the template from https://github.com/kasperskytte/bash_template
 # License is MIT, which means the author takes no responsibilities, but you can use it for anything you want
-#exit when a command fails (use "|| true" to allow a command to fail)
+
+#exit when a command fails (use "|| :" after a command to allow it to fail)
 set -o errexit
+
 # exit when a pipe fails
 set -o pipefail
+
 #disallow undeclared variables
 set -o nounset
+
 #disallow clobbering (overwriting) of files
 #set -o noclobber
+
 #print exactly what gets executed (useful for debugging)
 #set -o xtrace
 
 VERSION="1.0"
 
 #use all logical cores except 2 unless adjusted by user
-MAX_THREADS=${MAX_THREADS:-$((`nproc`-2))}
+MAX_THREADS=${MAX_THREADS:-$(($(nproc)-2))}
 
 #default error message if bad usage
 usageError() {
-  local self
-  self=$(basename "$0")
   echo "Invalid usage: $1" 1>&2
   echo ""
-  echo "Run 'bash $self -h' for help"
+  eval "bash $0 -h"
 }
 
 #fetch and check options provided by user
