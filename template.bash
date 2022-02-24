@@ -9,7 +9,7 @@ set -o errexit
 set -o pipefail
 
 #disallow undeclared variables
-set -o nounset
+#set -o nounset
 
 #disallow clobbering (overwriting) of files
 #set -o noclobber
@@ -17,23 +17,77 @@ set -o nounset
 #print exactly what gets executed (useful for debugging)
 #set -o xtrace
 
-VERSION="1.0"
+#set timezone if not set already
+if [[ -z "$(env | grep '^TZ=')" ]]
+then
+  TZ="Europe/Copenhagen"
+fi
+
+VERSION="1.2"
 
 #use all logical cores except 2 unless adjusted by user
-MAX_THREADS=${MAX_THREADS:-$(($(nproc)-2))}
+max_threads=${max_threads:-$(($(nproc)-2))}
 
-#default error message if bad usage
+logfilename="logfile_$(date '+%Y%m%d_%H%M%S').txt"
+
+#function to print default error message if bad usage
 usageError() {
   echo "Invalid usage: $1" 1>&2
   echo ""
   eval "bash $0 -h"
 }
 
+#function to add timestamps to progress messages
+scriptMessage() {
+  #check user arguments
+  if [ ! $# -eq 1 ]
+  then
+    echo "Error: function must be passed exactly 1 argument" >&2
+    exit 1
+  fi
+  echo " *** [$(date '+%Y-%m-%d %H:%M:%S')] script message: $1"
+}
+
+#function to check if executable(s) are available in $PATH
+checkCommand() {
+  args="$*"
+  exit="no"
+  for arg in $args
+  do
+    if [ -z "$(command -v "$arg")" ]
+    then
+      echo "${arg}: command not found"
+      exit="yes"
+    fi
+  done
+  if [ $exit == "yes" ]
+  then
+    exit 1
+  fi
+}
+
+#function to check if a folder is present and empty
+checkFolder() {
+  #check user arguments
+  if [ ! $# -eq 1 ]
+  then
+    echo "Error: function must be passed exactly 1 argument" >&2
+    exit 1
+  fi
+  if [ -d "$1" ]
+  then
+      scriptMessage "A directory named '$1' already exists and is needed for this script to run. Please backup or delete the folder."
+      scriptMessage "Exiting script."
+      exit 1
+  else
+    mkdir -p "$1"
+  fi
+}
+
+#check for all required commands before doing anything else
+checkCommand awk sed samtools minimap2 usearch
+
 #fetch and check options provided by user
-#flags for required options, checked after getopts loop
-i_flag=0
-d_flag=0
-o_flag=0
 while getopts ":hi:d:t:vo:" opt; do
 case ${opt} in
   h )
@@ -42,30 +96,27 @@ case ${opt} in
     echo "Options:"
     echo "  -h    Display this help text and exit."
     echo "  -v    Print version and exit."
-    echo "  -i    Input data."
-    echo "  -d    Path to database."
+    echo "  -i    (required) Input data."
+    echo "  -o    (required) Output folder."
+    echo "  -d    (required) Path to database."
     echo "  -t    Max number of threads to use. (Default: all available except 2)"
-    echo "  -o    Output folder."
     exit 1
     ;;
   i )
     input=$OPTARG
-    i_flag=1
+    ;;
+  o )
+    output=$OPTARG
     ;;
   d )
     database=$OPTARG
-    d_flag=1
     ;;
   t )
-    MAX_THREADS=$OPTARG
+    max_threads=$OPTARG
     ;;
   v )
     echo "Version: $VERSION"
     exit 0
-    ;;
-  o )
-    output=$OPTARG
-    o_flag=1
     ;;
   \? )
     usageError "Invalid Option: -$OPTARG"
@@ -79,43 +130,50 @@ esac
 done
 shift $((OPTIND -1)) #reset option pointer
 
-#check all required options
-if [ $i_flag -eq 0 ]
+#check required options
+if [[ -z "$input" ]]
 then
-	usageError "option -i is required"
+  usageError "option -i is required"
 	exit 1
 fi
-if [ $d_flag -eq 0 ]
-then
-	usageError "option -d is required"
-	exit 1
-fi
-if [ $o_flag -eq 0 ]
+if [[ -z "$output" ]]
 then
 	usageError "option -o is required"
 	exit 1
 fi
+if [[ -z "$database" ]]
+then
+	usageError "option -d is required"
+	exit 1
+fi
 
-#function to add timestamps to progress messages
-scriptMessage() {
-  #check user arguments
-  if [ ! $# -eq 1 ]
-  then
-    echo "Error: function must be passed exactly 1 argument" >&2
-    exit 1
-  fi
-  echo " *** [$(date '+%Y-%m-%d %H:%M:%S')] script message: $1"
+checkFolder "$output"
+logfilepath="${output}/${logfilename}"
+
+#actual script wrapped in a function to allow writing stderr+stdout to log file
+main() {
+  echo "#################################################"
+  echo "Script: $(realpath "$0")"
+  echo "System time: $(date '+%Y-%m-%d %H:%M:%S') (${TZ})"
+  echo "Script version: ${VERSION} (available at https://github.com/kasperskytte/bash_template)"
+  echo "Current user name: $(whoami)"
+  echo "Current working directory: $(pwd)"
+  echo "Input file: $(realpath "$input")"
+  echo "Output folder: $(realpath -m "$output")"
+  echo "Database: $(realpath -m "$database")"
+  echo "Max. number of threads: ${max_threads}"
+  echo "Log file: $(realpath -m "$logfilepath")"
+  echo "#################################################"
+  echo
+
+  scriptMessage "Step 1: xxxx..."
+  scriptMessage "Step 2: yyyy..."
+
+  #print elapsed time since script was invoked
+  duration=$(printf '%02dh:%02dm:%02ds\n' $((SECONDS/3600)) $((SECONDS%3600/60)) $((SECONDS%60)))
+  scriptMessage "Done processing. Time elapsed: $duration!"
 }
 
-##### START OF ACTUAL SCRIPT #####
-scriptMessage "Version: $VERSION"
-scriptMessage "max threads: $MAX_THREADS"
-scriptMessage "input: $input"
-scriptMessage "database: $database"
-scriptMessage "output: $output"
-##### END OF ACTUAL SCRIPT #####
-
-#print elapsed time since script was invoked
-duration=$(printf '%02dh:%02dm:%02ds\n' $(($SECONDS/3600)) $(($SECONDS%3600/60)) $(($SECONDS%60)))
-scriptMessage "Done in: $duration!"
-exit 0
+#clear log file first if it happens to already exist
+true > "$logfilepath"
+main |& tee -a "$logfilepath"
