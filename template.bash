@@ -23,18 +23,44 @@ then
   TZ="Europe/Copenhagen"
 fi
 
-VERSION="1.2"
+#remember to manually uptick the version with every change to the file
+VERSION="1.2.1"
+
+#To allow the user to overwrite "internal" variables without adjusting the script
+#set a default value like below, and then if the variable already exists in the
+#invoking shell, the script will use that instead. This is handy for adjusting
+#hard-coded variables that shouldn't be available from getops arguments 
+#provided with dashes like "-h". 
+#for example:
+#  export someinternalvar="nondefaultvalue"
+#  bash template.bash
+# will replace someinternalvar with "nondefaultvalue"
+someinternalvar=${someinternalvar:-"defaultvalue"}
 
 #use all logical cores except 2 unless adjusted by user
 max_threads=${max_threads:-$(($(nproc)-2))}
 
-logfilename="logfile_$(date '+%Y%m%d_%H%M%S').txt"
+#default log file name
+logfilename=${logfilename:-"logfile_$(date '+%Y%m%d_%H%M%S').txt"}
+
+printHelp() {
+  echo "Some help text"
+  echo "Version: $VERSION"
+  echo "Options:"
+  echo "  -h    Display this help text and exit."
+  echo "  -v    Print version and exit."
+  echo "  -i    (required) Input data."
+  echo "  -o    (required) Output folder."
+  echo "  -d    (required) Path to database."
+  echo "  -t    Max number of threads to use. (Default: all available except 2)"
+}
 
 #function to print default error message if bad usage
 usageError() {
   echo "Invalid usage: $1" 1>&2
   echo ""
-  eval "bash $0 -h"
+  printHelp
+  exit 1
 }
 
 #function to add timestamps to progress messages
@@ -49,19 +75,24 @@ scriptMessage() {
 }
 
 #function to check if executable(s) are available in $PATH
+#example usage: checkCommand minimap2 parallel somethirdprogram
 checkCommand() {
-  args="$*"
-  exit="no"
-  for arg in $args
+  argsA=( "$@" )
+  local exit=false
+  for arg in "${argsA[@]}"
   do
-    if [ -z "$(command -v "$arg")" ]
+    if ! which "$arg" &> /dev/null
     then
       echo "${arg}: command not found"
-      exit="yes"
+      exit=true
     fi
   done
-  if [ $exit == "yes" ]
+
+  if $exit
   then
+    echo
+    echo "Please make sure the above command(s) are installed, \
+executable, and available somewhere in the \$PATH variable."
     exit 1
   fi
 }
@@ -84,22 +115,15 @@ checkFolder() {
   fi
 }
 
-#check for all required commands before doing anything else
-checkCommand awk sed samtools minimap2 usearch
+#check for all required commands before doing anything else, for example:
+checkCommand realpath awk sed samtools minimap2
 
-#fetch and check options provided by user
+#fetch and check options provided by user and save as variables for use 
+#throughout the script
 while getopts ":hi:d:t:vo:" opt; do
 case ${opt} in
   h )
-    echo "Some help text"
-    echo "Version: $VERSION"
-    echo "Options:"
-    echo "  -h    Display this help text and exit."
-    echo "  -v    Print version and exit."
-    echo "  -i    (required) Input data."
-    echo "  -o    (required) Output folder."
-    echo "  -d    (required) Path to database."
-    echo "  -t    Max number of threads to use. (Default: all available except 2)"
+    printHelp
     exit 1
     ;;
   i )
@@ -153,10 +177,11 @@ logfilepath="${output}/${logfilename}"
 #actual script wrapped in a function to allow writing stderr+stdout to log file
 main() {
   echo "#################################################"
-  echo "Script: $(realpath "$0")"
-  echo "System time: $(date '+%Y-%m-%d %H:%M:%S') (${TZ})"
-  echo "Script version: ${VERSION} (available at https://github.com/kasperskytte/bash_template)"
+  echo "Host name: $(hostname)"
   echo "Current user name: $(whoami)"
+  echo "System time: $(date '+%Y-%m-%d %H:%M:%S') (${TZ})"
+  echo "Script: $(realpath "$0")"
+  echo "Script version: ${VERSION} (available at https://github.com/kasperskytte/bash_template)"
   echo "Current working directory: $(pwd)"
   echo "Input file: $(realpath "$input")"
   echo "Output folder: $(realpath -m "$output")"
@@ -166,8 +191,10 @@ main() {
   echo "#################################################"
   echo
 
-  scriptMessage "Step 1: xxxx..."
-  scriptMessage "Step 2: yyyy..."
+  scriptMessage "Step 1: I'm gonna sleep for 5 seconds..."
+  sleep 5
+  scriptMessage "Step 2: I'm gonna take 2 seconds more..."
+  sleep 2
 
   #print elapsed time since script was invoked
   duration=$(printf '%02dh:%02dm:%02ds\n' $((SECONDS/3600)) $((SECONDS%3600/60)) $((SECONDS%60)))
