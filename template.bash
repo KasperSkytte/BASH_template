@@ -24,7 +24,7 @@ then
 fi
 
 #remember to manually uptick the version with every change to the file
-VERSION="1.2.1"
+VERSION="1.2.2"
 
 #To allow the user to overwrite "internal" variables without adjusting the script
 #set a default value like below, and then if the variable already exists in the
@@ -53,6 +53,9 @@ printHelp() {
   echo "  -o    (required) Output folder."
   echo "  -d    (required) Path to database."
   echo "  -t    Max number of threads to use. (Default: all available except 2)"
+  echo
+  echo "Additional options can be set by exporting environment variables before running the script:"
+  echo "  - someinternalvar: Describe the variable"
 }
 
 #function to print default error message if bad usage
@@ -198,7 +201,7 @@ main() {
 
   #print elapsed time since script was invoked
   duration=$(printf '%02dh:%02dm:%02ds\n' $((SECONDS/3600)) $((SECONDS%3600/60)) $((SECONDS%60)))
-  scriptMessage "Done processing. Time elapsed: $duration!"
+  scriptMessage "Done. Time elapsed: $duration!"
 }
 
 #clear log file first if it happens to already exist
