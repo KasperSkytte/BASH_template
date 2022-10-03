@@ -1,17 +1,17 @@
 #################################################
 Host name: slaptop
 Current user name: kapper
-System time: 2022-08-05 11:29:21 (Europe/Copenhagen)
+System time: 2022-10-03 14:13:53 (Europe/Copenhagen)
 Script: /home/kapper/Knockbox/github/BASH_template/template.bash
-Script version: 1.2.1 (available at https://github.com/kasperskytte/bash_template)
+Script version: 1.2.2 (available at https://github.com/kasperskytte/bash_template)
 Current working directory: /home/kapper/Knockbox/github/BASH_template
 Input file: /home/kapper/Knockbox/github/BASH_template/data/input_file
 Output folder: /home/kapper/Knockbox/github/BASH_template/data/output
 Database: /home/kapper/Knockbox/databases/some_database/database_file
 Max. number of threads: 10
-Log file: /home/kapper/Knockbox/github/BASH_template/data/output/logfile_20220805_112921.txt
+Log file: /home/kapper/Knockbox/github/BASH_template/data/output/logfile_20221003_141353.txt
 #################################################
 
- *** [2022-08-05 11:29:21] script message: Step 1: I'm gonna sleep for 5 seconds...
- *** [2022-08-05 11:29:27] script message: Step 2: I'm gonna take 2 seconds more...
- *** [2022-08-05 11:29:29] script message: Done processing. Time elapsed: 00h:00m:08s!
+ *** [2022-10-03 14:13:53] script message: Step 1: I'm gonna sleep for 5 seconds...
+ *** [2022-10-03 14:13:58] script message: Step 2: I'm gonna take 2 seconds more...
+ *** [2022-10-03 14:14:00] script message: Done. Time elapsed: 00h:00m:07s!
