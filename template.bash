@@ -74,7 +74,7 @@ scriptMessage() {
     echo "Error: function must be passed exactly 1 argument" >&2
     exit 1
   fi
-  echo " *** [$(date '+%Y-%m-%d %H:%M:%S')] script message: $1"
+  echo " *** [$(date '+%Y-%m-%d %H:%M:%S')] $(basename "$0"): $1"
 }
 
 #function to check if executable(s) are available in $PATH
